@@ -1,0 +1,10 @@
+- name: ensure build tools are installed on the system
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - make
+    - openssl-devel
+    - pcre-devel
+    - gcc
+    - patch

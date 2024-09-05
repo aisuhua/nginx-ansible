@@ -1,0 +1,16 @@
+ungrouped:
+  hosts:
+    server1-nginx1:
+      ansible_ssh_host: 172.31.96.151
+    server2-nginx1:
+      ansible_ssh_host: 172.31.96.151
+  vars:
+    nginx_version: 1.26.2
+    nginx_download_url: http://172.31.96.1/nginx/nginx-1.26.2.tar.gz
+    nginx_install_dir: "/opt/nginx/{{ nginx_version }}/{{ inventory_hostname }}"
+    nginx_service_name: "nginx-{{ nginx_version }}-{{ inventory_hostname }}"
+    nginx_build_dir: "/tmp/nginx/{{ nginx_version  }}/{{ inventory_hostname }}"
+    nginx_run_user: nginx
+    nginx_run_group: nginx
+    nginx_module_http_proxy_connect_download_url: http://172.31.96.1/nginx/ngx_http_proxy_connect_module-master.zip
+    nginx_module_vts_download_url: http://172.31.96.1/nginx/nginx-module-vts-master.zip

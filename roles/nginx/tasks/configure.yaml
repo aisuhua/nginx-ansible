@@ -1,0 +1,39 @@
+- name: give normal user permission to use small port
+  shell:
+    cmd: "setcap cap_net_bind_service=+eip {{ nginx_install_dir }}/sbin/nginx"
+  changed_when: false
+
+- name: create http.d and stream.d directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
+  loop:
+    - "{{ nginx_install_dir }}/conf/http.d"
+    - "{{ nginx_install_dir }}/conf/stream.d"
+ 
+- name: set nginx.conf 
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_install_dir }}/conf/nginx.conf"
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
+  notify: restart nginx
+
+- name: set nginx.service config
+  template:
+    src: nginx.service.j2
+    dest: "/etc/systemd/system/{{ nginx_service_name }}.service"
+  notify: 
+    - systemctl daemon-reload
+    - restart nginx
+
+- name: ensuring that handlers are executed
+  meta: flush_handlers
+
+- name: start nginx
+  systemd:
+    name: "{{ nginx_service_name }}.service"
+    enabled: yes
+    state: started

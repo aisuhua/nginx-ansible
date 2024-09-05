@@ -1,0 +1,32 @@
+---
+- name: remove
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - init
+  
+  tasks:
+    - name: stop nginx service
+      service:
+        name: "{{ nginx_service_name }}"
+        enabled: false
+        state: stopped
+      failed_when: false
+
+    - name: remove systemd service file
+      file:
+        path: "/etc/systemd/system/{{ nginx_service_name }}.service"
+        state: absent
+
+    - name: remove install folder
+      file:
+        path: "{{ nginx_install_dir }}"
+        state: absent
+
+    - name: delete all build files
+      file:
+        path: "{{ nginx_build_dir }}"
+        state: absent
+   
