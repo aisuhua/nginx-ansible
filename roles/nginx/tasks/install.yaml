@@ -1,5 +1,5 @@
 - name: create service group
-  user:
+  group:
     name: "{{ nginx_run_group }}"
     state: present
 
@@ -7,6 +7,7 @@
   user:
     name: "{{ nginx_run_user }}"
     group: "{{ nginx_run_group }}"
+    password: "{{ nginx_run_pass | password_hash('sha512', 'suhua123') if nginx_run_pass is defined else omit }}"
     state: present
 
 - name: ensure install dir is exists
