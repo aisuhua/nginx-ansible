@@ -7,6 +7,7 @@
   user:
     name: "{{ nginx_run_user }}"
     group: "{{ nginx_run_group }}"
+    shell: "{{ '/usr/sbin/nologin' if nginx_run_noshell is defined and (nginx_run_noshell | bool) else '/bin/bash' }}"
     password: "{{ nginx_run_pass | password_hash('sha512', 'suhua123') if nginx_run_pass is defined else omit }}"
     state: present
 
