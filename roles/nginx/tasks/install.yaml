@@ -1,6 +1,12 @@
+- name: create service group
+  user:
+    name: "{{ nginx_run_group }}"
+    state: present
+
 - name: create service user
   user:
     name: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
     state: present
 
 - name: ensure install dir is exists
@@ -8,7 +14,7 @@
     path: "{{ nginx_install_dir }}"
     state: directory
     owner: "{{ nginx_run_user }}"
-    group: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
 
 - name: check nginx is installed or not
   stat:
@@ -20,6 +26,8 @@
     path: "{{ nginx_build_dir }}"
     state: directory
     recurse: true
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
   when: not nginx_status.stat.exists 
 
 - name: download nginx
@@ -27,6 +35,8 @@
     src: "{{ nginx_download_url }}"
     dest: "{{ nginx_build_dir }}"
     remote_src: yes
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
   when: not nginx_status.stat.exists 
 
 - name: download ngx_http_proxy_connect_module
@@ -34,6 +44,8 @@
     src: "{{ nginx_module_http_proxy_connect_download_url }}"
     dest: "{{ nginx_build_dir }}"
     remote_src: yes
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
   when: not nginx_status.stat.exists 
 
 - name: download nginx-module-vts
@@ -41,18 +53,22 @@
     src: "{{ nginx_module_vts_download_url }}"
     dest: "{{ nginx_build_dir }}"
     remote_src: yes
+    owner: "{{ nginx_run_user }}"
+    group: "{{ nginx_run_group }}"
   when: not nginx_status.stat.exists 
 
 - name: patch nginx
   shell:
     cmd: "patch -p1 < {{ nginx_build_dir }}/ngx_http_proxy_connect_module-master/patch/proxy_connect_rewrite_102101.patch"
     chdir: "{{ nginx_build_dir }}/nginx-{{ nginx_version }}"
+  become_user: "{{ nginx_run_user }}" 
   when: not nginx_status.stat.exists 
 
 - name: configure nginx
   shell:
     chdir: "{{ nginx_build_dir }}/nginx-{{ nginx_version }}"
     cmd: "./configure --prefix={{ nginx_install_dir }} --user={{ nginx_run_user }} --group={{ nginx_run_group }} --with-http_v2_module --with-http_gzip_static_module --with-http_stub_status_module --with-http_ssl_module --with-http_realip_module --with-stream --with-stream_ssl_module --with-stream_realip_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_sub_module --with-http_sub_module --with-stream_ssl_preread_module --with-debug --add-module={{ nginx_build_dir }}/nginx-module-vts-master --add-module={{ nginx_build_dir }}/ngx_http_proxy_connect_module-master"
+  become_user: "{{ nginx_run_user }}" 
   when: not nginx_status.stat.exists 
 
 - name: build nginx
@@ -61,21 +77,14 @@
     params: 
       --jobs: 8
       BUILD_TLS: yes
+  become_user: "{{ nginx_run_user }}" 
   when: not nginx_status.stat.exists
 
 - name: install nginx
   make:
     chdir: "{{ nginx_build_dir }}/nginx-{{ nginx_version }}"
     target: install
-  when: not nginx_status.stat.exists
-
-- name: change install directory permission
-  file:
-    path: "{{ nginx_install_dir }}"
-    owner: "{{ nginx_run_user }}"
-    group: "{{ nginx_run_user }}"
-    state: directory
-    recurse: true
+  become_user: "{{ nginx_run_user }}" 
   when: not nginx_status.stat.exists
 
 - name: delete all build files
